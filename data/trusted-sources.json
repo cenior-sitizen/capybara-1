@@ -1,0 +1,68 @@
+[
+  {
+    "domain": "gov.sg",
+    "name": "Singapore Government",
+    "url": "https://www.gov.sg",
+    "topics": ["government", "policy", "singapore", "official"]
+  },
+  {
+    "domain": "moh.gov.sg",
+    "name": "Ministry of Health Singapore",
+    "url": "https://www.moh.gov.sg",
+    "topics": ["health", "covid", "vaccine", "disease", "medical", "moh"]
+  },
+  {
+    "domain": "spf.gov.sg",
+    "name": "Singapore Police Force",
+    "url": "https://www.police.gov.sg",
+    "topics": ["police", "crime", "scam", "safety", "spf"]
+  },
+  {
+    "domain": "msf.gov.sg",
+    "name": "Ministry of Social and Family Development",
+    "url": "https://www.msf.gov.sg",
+    "topics": ["social", "family", "welfare", "msf"]
+  },
+  {
+    "domain": "data.gov.sg",
+    "name": "Singapore Open Data",
+    "url": "https://data.gov.sg",
+    "topics": ["data", "statistics", "singapore"]
+  },
+  {
+    "domain": "nea.gov.sg",
+    "name": "National Environment Agency",
+    "url": "https://www.nea.gov.sg",
+    "topics": ["environment", "weather", "haze", "dengue", "nea"]
+  },
+  {
+    "domain": "channelnewsasia.com",
+    "name": "CNA",
+    "url": "https://www.channelnewsasia.com",
+    "topics": ["news", "singapore", "asia", "cna"]
+  },
+  {
+    "domain": "straitstimes.com",
+    "name": "The Straits Times",
+    "url": "https://www.straitstimes.com",
+    "topics": ["news", "singapore", "straits times"]
+  },
+  {
+    "domain": "who.int",
+    "name": "World Health Organization",
+    "url": "https://www.who.int",
+    "topics": ["health", "who", "global", "disease", "vaccine"]
+  },
+  {
+    "domain": "reuters.com",
+    "name": "Reuters",
+    "url": "https://www.reuters.com",
+    "topics": ["news", "world", "reuters"]
+  },
+  {
+    "domain": "bbc.com",
+    "name": "BBC",
+    "url": "https://www.bbc.com",
+    "topics": ["news", "world", "bbc"]
+  }
+]
