@@ -1,65 +1,130 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+      <main className="flex min-h-screen w-full max-w-4xl flex-col items-center gap-12 py-20 px-8 bg-white dark:bg-black">
+        <header className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Image src="/next.svg" alt="logo" width={48} height={16} />
+            <h1 className="text-2xl font-semibold">DeepFakeGuard</h1>
+          </div>
+          <nav className="text-sm text-zinc-600 dark:text-zinc-400">
+            Scam detection · Deepfake video analysis · Trust signals
+          </nav>
+        </header>
+
+        <section className="w-full flex flex-col items-center gap-6 text-center">
+          <h2 className="text-4xl font-bold leading-tight">
+            Detect deepfake scams in videos — fast and explainable
+          </h2>
+          <p className="max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
+            Upload a short video clip and get a quick risk summary. DeepFakeGuard highlights probable
+            manipulations and gives guidance to avoid social engineering and financial scams.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+          <DemoUploader />
+        </section>
+
+        <section className="w-full grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <Feature title="Quick Analysis" description="Upload and get results in seconds (demo stub)." />
+          <Feature title="Explainable Scores" description="Confidence scores and short reasons to help decision making." />
+          <Feature title="Safety Tips" description="Actionable steps when a video looks suspicious." />
+        </section>
+
+        <footer className="w-full text-sm text-zinc-500 dark:text-zinc-400">
+          Built as a demo landing page for scam detection on deepfake videos.
+        </footer>
       </main>
     </div>
+  );
+}
+
+function Feature({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="rounded-lg border p-6">
+      <h3 className="text-lg font-medium">{title}</h3>
+      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
+    </div>
+  );
+}
+
+function DemoUploader() {
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setResult(null);
+    if (!file) {
+      setError("Please select a video file (short clip).");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Analysis failed");
+      }
+
+      const json = await res.json();
+      setResult(json);
+    } catch (err: any) {
+      setError(err?.message || "Unexpected error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full max-w-xl">
+      <label className="flex flex-col gap-2">
+        <span className="text-sm font-medium">Demo video (mp4, mov) — keep clip &lt;10s</span>
+        <input
+          type="file"
+          accept="video/*"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          className="block w-full rounded border px-3 py-2"
+        />
+      </label>
+
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-full bg-black px-5 py-2 text-white disabled:opacity-60"
+        >
+          {loading ? "Analyzing…" : "Analyze Clip"}
+        </button>
+
+        {file && <span className="text-sm text-zinc-600 dark:text-zinc-400">{file.name}</span>}
+      </div>
+
+      <div className="mt-4">
+        {error && <div className="text-sm text-red-600">{error}</div>}
+
+        {result && (
+          <div className="mt-3 rounded border p-4">
+            <strong className="block">Result (demo):</strong>
+            <pre className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{JSON.stringify(result, null, 2)}</pre>
+            <p className="mt-2 text-xs text-zinc-600">Note: integrate a backend analysis model for real detection.</p>
+          </div>
+        )}
+      </div>
+    </form>
   );
 }
