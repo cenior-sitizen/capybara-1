@@ -65,9 +65,11 @@ function NavWithLine() {
 }
 
 export default function Home() {
-  const [mode, setMode] = useState<"text" | "url">("text");
+  const [mode, setMode] = useState<"text" | "url" | "media">("text");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaResult, setMediaResult] = useState<any | null>(null);
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [saveReport, setSaveReport] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,6 +86,33 @@ export default function Home() {
     e.preventDefault();
     setError(null);
     setResult(null);
+    setMediaResult(null);
+
+    if (mode === "media") {
+      if (!mediaFile) {
+        setError("Please select an image or video file.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const fd = new FormData();
+        fd.append("file", mediaFile);
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          body: fd,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to analyze media");
+        setMediaResult(data);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Something went wrong during media analysis.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     const input = mode === "url" ? url.trim() : text.trim();
     if (!input) {
       setError(mode === "url" ? "Please enter a URL." : "Please enter or paste some text.");
@@ -142,7 +171,7 @@ export default function Home() {
             <div>
               <div className="mb-6 flex items-center gap-3">
                 <span className="rounded-lg bg-white/10 px-3 py-1 text-sm text-[#def141]">
-                  Credibility check
+                  Credibility & media check
                 </span>
               </div>
               <h1
@@ -152,8 +181,8 @@ export default function Home() {
                 Check credibility of information
               </h1>
               <p className="mb-8 max-w-lg text-lg text-white/70">
-                Paste a message, paragraph, or URL. Get a credibility report with context and
-                trusted references. For Singapore and multilingual communities.
+                Paste a message, paragraph, or URL — or upload a social media image/video — and get an
+                AI-assisted credibility summary with context and trusted references.
               </p>
               <a
                 href="#check-form"
@@ -174,12 +203,12 @@ export default function Home() {
                     </svg>
                   </div>
                   <span className="font-medium text-white" style={{ fontFamily: "var(--font-fahkwang), sans-serif" }}>
-                    Text or URL
+                    Text, URL, or media
                   </span>
                 </div>
                 <p className="text-sm text-white/60">
-                  Enter content below and we’ll analyse it against trusted sources and return a
-                  rating, reasons, and references.
+                  Start by entering content or uploading a clip. VeriSG gives you a structured report and
+                  safety checklist — it does not make definitive claims.
                 </p>
               </div>
             </div>
@@ -214,9 +243,20 @@ export default function Home() {
               >
                 Check a link (URL)
               </button>
+              <button
+                type="button"
+                onClick={() => setMode("media")}
+                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                  mode === "media"
+                    ? "bg-[#5c31ff] text-white"
+                    : "bg-white/10 text-white/80 hover:bg-white/15 hover:text-white"
+                }`}
+              >
+                Check media (image / video)
+              </button>
             </div>
 
-            {mode === "text" ? (
+            {mode === "text" && (
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -224,7 +264,9 @@ export default function Home() {
                 rows={5}
                 className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-white placeholder-white/40 focus:border-[#5c31ff] focus:outline-none focus:ring-1 focus:ring-[#5c31ff]"
               />
-            ) : (
+            )}
+
+            {mode === "url" && (
               <input
                 type="url"
                 value={url}
@@ -234,9 +276,23 @@ export default function Home() {
               />
             )}
 
+            {mode === "media" && (
+              <div className="space-y-2">
+                <label className="text-sm text-white/70">
+                  Upload an image or short video (demo analysis for AI-generated / deepfake likelihood).
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(e) => setMediaFile(e.target.files?.[0] ?? null)}
+                  className="block w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white file:mr-3 file:rounded-lg file:border-0 file:bg-white/20 file:px-3 file:py-2 file:text-sm file:text-white hover:file:bg-white/30"
+                />
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-6">
               <label className="flex items-center gap-2">
-                <span className="text-sm text-white/70">Report language:</span>
+                <span className="text-sm text-white/70">Report language (text/URL):</span>
                 <select
                   value={targetLanguage}
                   onChange={(e) => setTargetLanguage(e.target.value)}
@@ -256,7 +312,7 @@ export default function Home() {
                   onChange={(e) => setSaveReport(e.target.checked)}
                   className="rounded border-white/30 bg-white/10 text-[#5c31ff] focus:ring-[#5c31ff]"
                 />
-                <span className="text-sm text-white/70">Save report to my history</span>
+                <span className="text-sm text-white/70">Save text/URL reports to my history</span>
               </label>
             </div>
 
@@ -265,7 +321,13 @@ export default function Home() {
               disabled={loading}
               className="rounded-full bg-[#e94560] px-6 py-3 font-medium text-white transition hover:bg-[#d63a54] disabled:opacity-60"
             >
-              {loading ? "Generating report…" : "Generate report"}
+              {loading
+                ? mode === "media"
+                  ? "Analyzing media…"
+                  : "Generating report…"
+                : mode === "media"
+                  ? "Analyze media"
+                  : "Generate report"}
             </button>
 
             {error && (
@@ -285,6 +347,8 @@ export default function Home() {
               onToggleTranslation={() => setShowTranslation((v) => !v)}
             />
           )}
+
+          {mediaResult && <MediaResultView result={mediaResult} />}
         </div>
       </main>
 
@@ -471,6 +535,52 @@ function ReportView({
           ))}
         </ul>
       </section>
+    </article>
+  );
+}
+
+function MediaResultView({ result }: { result: any }) {
+  const { fileName, size, riskScore, riskLabel, reasons, note } = result || {};
+
+  const mappedLabel =
+    riskLabel === "High" ? "Likely AI-generated" : riskLabel === "Low" ? "Likely authentic" : "Unclear";
+
+  return (
+    <article className="mt-10 border-t border-white/10 pt-10">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold text-white" style={{ fontFamily: "var(--font-fahkwang), sans-serif" }}>
+          Media analysis (demo)
+        </h2>
+      </div>
+      <p className="mb-2 text-sm text-white/60">
+        This is a prototype signal-only analysis based on file characteristics. Integrate a proper deepfake model
+        for real detection.
+      </p>
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-medium text-white/90">
+          {mappedLabel}
+        </span>
+        <span className="text-sm text-white/60">Confidence (heuristic): {Math.round(riskScore ?? 0)}%</span>
+      </div>
+
+      <div className="mb-4 text-sm text-white/70">
+        <p>File: {fileName ?? "uploaded"}</p>
+        {typeof size === "number" && <p>Size: {(size / (1024 * 1024)).toFixed(2)} MB</p>}
+      </div>
+
+      <section className="mb-4">
+        <h3 className="mb-1 font-medium text-white/90">Evidence signals (simulated)</h3>
+        <ul className="list-inside list-disc space-y-1 text-white/70">
+          {(reasons as string[] | undefined)?.map((r, i) => <li key={i}>{r}</li>)}
+        </ul>
+      </section>
+
+      {note && (
+        <p className="text-xs text-white/50">
+          {note}
+        </p>
+      )}
     </article>
   );
 }
