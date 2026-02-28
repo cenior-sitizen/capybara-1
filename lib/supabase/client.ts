@@ -39,7 +39,7 @@ function createStubClient() {
 
 export function createClient() {
   if (!isSupabaseConfigured()) {
-    return createStubClient() as ReturnType<typeof createBrowserClient>;
+    return createStubClient() as unknown as ReturnType<typeof createBrowserClient>;
   }
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
